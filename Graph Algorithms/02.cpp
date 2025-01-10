@@ -3,101 +3,76 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-#pragma GCC optimize("O3", "unroll-loops")
-auto init = []()
-{ 
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    cout.tie(0);
-    return 'c';
-}();
-
-void find_path(vector<vector<char>> &matrix, int si, int sj)
-{
-    int n = matrix.size(), m = matrix[0].size();
-    vector<vector<int>> vis(n, vector<int>(m, 0));
-
-    vis[si][sj] = 1;
-    queue<pair<pair<int, int>, string>> q;
-    q.push({{si, sj}, ""});
-
-    string answer = "";
-    bool flag = true;
-
-    while(!q.empty() && flag)
-    {
-        int r = q.front().first.first;
-        int c = q.front().first.second;
-        string s = q.front().second;
-        q.pop();
-
-        // traversing neighbours
-
-        vector<int> dx = {0, 0, 1, -1};
-        vector<int> dy = {1, -1, 0, 0};
-        vector<char> dir = {'R', 'L', 'D', 'U'};
-
-        for(int k = 0; k < 4; k++)
-        {
-            int nr = r + dx[k], nc = c + dy[k];
-            if(nr >= 0 && nr < n && nc >= 0 && nc < m && matrix[nr][nc] == '.' && !vis[nr][nc]) 
-            {
-                vis[nr][nc] = 1;
-                q.push({{nr, nc}, s + dir[k]});
+struct triple{
+    int first;
+    int second;
+    string third;
+};
+ 
+void shortestPath(int i, int j, int n, int m, vector<string>&x, vector<vector<triple>>&parent, queue<pair<int,int>>&bfs){
+    vector<int>dy = {-1, 0, 1, 0};
+    vector<int>dx = {0, -1, 0, 1};
+    vector<char>dir = {'U', 'L', 'D', 'R'};
+ 
+    while(!bfs.empty()){
+        pair<int,int>p = bfs.front(); bfs.pop();
+ 
+        for (int k=0; k<4; k++){
+            int ni = p.first + dy[k];
+            int nj = p.second + dx[k];
+ 
+            if (ni>=0 && ni<n && nj>=0 && nj<m && x[ni][nj]!='#' && !(ni==i && nj==j)){
+                if (parent[ni][nj].third.empty()){
+                    parent[ni][nj].first=p.first;
+                    parent[ni][nj].second=p.second;
+                    parent[ni][nj].third=dir[k];
+                    bfs.emplace(ni,nj);
+                }
             }
-            else if(nr >= 0 && nr < n && nc >= 0 && nc < m && matrix[nr][nc] == 'B')
-            {
-                answer = s + dir[k];
-                flag = false;
-                break;
-            }
-            
         }
     }
-
-    if(answer != "")
-    {
-        cout<<"YES\n";
-        cout<<answer.size()<<endl;
-        cout<<answer<<endl;
+}
+ 
+void solve(){
+    int n,m; cin>>n>>m;
+    vector<string>x(n);
+    for (int i=0; i<n; i++){
+        cin>>x[i];
     }
-    else cout<<"NO\n";
-    
+    vector<vector<triple>> parent(n, vector<triple>(m,{NULL,NULL,""}));
+    queue<pair<int,int>>bfs;
+    pair<int,int>end={};
+    pair<int,int>start={};
+    for (int i=0; i<n; i++){
+        for (int j=0; j<m; j++){
+            if (x[i][j]=='A'){
+                bfs.push({i,j});
+                shortestPath(i,j,n,m,x,parent,bfs);
+            }
+            if (x[i][j]=='B') end={i,j};
+        }
+    }
+    if (parent[end.first][end.second].third.size()!=0) {
+        cout << "YES" << endl;
+        string path = "";
+        while (start!=end){
+            path+=parent[end.first][end.second].third;
+            end={parent[end.first][end.second].first,parent[end.first][end.second].second};
+        }
+        reverse(path.begin(), path.end());
+        cout << path.size() << endl;
+        cout << path;
+    }
+    else{
+        cout << "NO";
+    }
 }
 
-signed main()
+int main()
 {
-    ios_base::sync_with_stdio(false); 
-    cin.tie(NULL);
-
-    int n, m;
-    cin>>n>>m;
-
-    vector<vector<char>> matrix(n, vector<char>(m));
-
-    int starti, startj;
-
-    for(int i = 0;  i < n; i++)
-    {
-        for(int j = 0; j < m; j++)
-        {
-            cin>>matrix[i][j];
-            if(matrix[i][j] == 'A')
-            {
-                starti = i;
-                startj = j;
-            }
-        }
-    }
-
-    
-
-    find_path(matrix, starti, startj);
-
+    solve();
     return 0;
 }
-
-// general idea :
 
 // you are trying to move from A (start) to B(end) using a 
 // trail of '.' characters. i will use a basic bfs traversal 
